@@ -23,3 +23,19 @@ def get_cheaters():
     except Exception as e:
         LOGGER.error(f"Error occured when you tried to get cheaters: {e}")
         return None
+
+
+def insert_data(players):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.executemany("INSERT INTO updated_players VALUES(?,?,?,?,?,?)", players)
+        conn.commit()
+        cursor.close()
+
+        return True
+
+    except Exception as e:
+        LOGGER.error(f"Error occured when you tried to get cheaters: {e}")
+        return None
+    

@@ -44,18 +44,58 @@ def filter_data_by_date(data_pd, date):
         return None
 
 
-def remove_cheaters(data_pd):
-    user_id_cashe = []
+def check_if_cheater(user_id, server_timestamp):
+    cheaters = sqlite_ops.get_cheaters()
+    if cheaters is None:
+        return None
+    
+    for cheater in cheaters:
+        cheater_id = cheater.get("player_id")
+        if cheater_id is None:
+            continue
+
+        if cheater_id != user_id:
+            continue
+            
+        ban_time = cheater.get("ban_time")
+        if ban_time is None:
+            continue
+
+        ban_time = datetime.datetime.strptime(ban_time, "%Y-%m-%d %H:%M:%S")
+            
+        user_date = datetime.datetime.utcfromtimestamp(server_timestamp)
+        user_date = user_date + datetime.timedelta(hours=3)
+
+        # print(f"user_date: {user_date} - banned_date: {ban_time} - delta: {user_date - ban_time}")
+        if user_date - ban_time >= datetime.timedelta(days=1):
+            return False
+    
+    return True
+
+
+def remove_cheaters_convert2list(data_pd):
+    output = []
 
     cheaters = sqlite_ops.get_cheaters()
     if cheaters is None:
         return None
 
     for log in data_pd.iterrows():
-        user_id = log[1][5]
-        if user_id in user_id_cashe:
+        user_data = log[1]        
+        user_id = user_data.iloc[5]
+        server_timestamp = user_data.iloc[0]
+        if check_if_cheater(user_id, server_timestamp) is not True:
             continue
 
+        event_id = user_data.iloc[1]
+        error_id = user_data.iloc[2]
+        json_server = user_data.iloc[3]
+        json_client = user_data.iloc[6]
+
+        output.append((server_timestamp, user_id, event_id, error_id, json_server, json_client))
+
+    return output
+        
 
 def insert_game_data(date="12-04-2021"):
     server_data = read_csv_data(SERVER_PATH)
@@ -84,20 +124,12 @@ def insert_game_data(date="12-04-2021"):
 
     joined_data = pd.merge(server_data, client_data, on="error_id", how="inner")
 
-    joined_data = remove_cheaters(joined_data)
+    joined_data = remove_cheaters_convert2list(joined_data)
     if joined_data is None:
         return None
+    
+    if sqlite_ops.insert_data(joined_data) is None:
+        return None
+    
+    return True
 
-
-# user_date = input("Enter the date in dd-mm-yyyy format (like 12-04-2021): ")
-
-
-insert_game_data()
-# input user date
-# create date range (user_date 00:00:00 AM - user_date 11:59:59 PM )
-# convert date range to timestamp
-# filter date1, date2 by timestamp range
-# join date1, date2 by error_id
-
-
-# reading two csv files
