@@ -69,6 +69,8 @@ json_client поле json из client.csv
 ```
 poetry install
 ```
+Переместите файлы client.csv и server.csv в папку data
+
 По умолчанию дата установлена 12.04.2021
 ```
 poetry run python src/main.py
