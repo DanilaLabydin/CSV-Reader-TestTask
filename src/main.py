@@ -133,3 +133,5 @@ def insert_game_data(date="12-04-2021"):
     
     return True
 
+
+# insert_game_data()

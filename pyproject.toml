@@ -9,6 +9,7 @@ packages = [{include = "csv_reader_testtask"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 pandas = "^2.1.0"
+memory-profiler = "^0.61.0"
 
 
 [tool.poetry.group.dependencies.dependencies]
